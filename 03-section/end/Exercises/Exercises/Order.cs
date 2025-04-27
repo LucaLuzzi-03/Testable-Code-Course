@@ -1,3 +1,5 @@
+using Exercises.enums;
+
 namespace Exercises;
 
 public class Order
@@ -7,5 +9,5 @@ public class Order
     public List<OrderItem> Items { get; set; } = new List<OrderItem>();
     public decimal TotalAmount { get; set; }
     public DateTime OrderDate { get; set; }
-    public string Status { get; set; }
+    public OrderStatus Status { get; set; }
 }

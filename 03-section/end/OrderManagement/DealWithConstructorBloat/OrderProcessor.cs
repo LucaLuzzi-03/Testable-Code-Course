@@ -2,33 +2,24 @@ namespace OrderManagement.DealWithConstructorBloat;
 
 public class OrderProcessor
 {
-    private readonly DiscountCalculator _discountCalculator;
-    private readonly ShippingCalculator _shippingCalculator;
-    private readonly TaxCalculator _taxCalculator;
+    private readonly OrderFinancialService _orderFinancialService;
     private readonly InventoryManager _inventoryManager;
     private readonly PaymentProcessor _paymentProcessor;
     private readonly OrderValidator _orderValidator;
-    private readonly CustomerNotifier _customerNotifier;
-    private readonly WarehouseNotifier _warehouseNotifier;
+    private readonly OrderNotificationService _orderNotificationService;
 
     public OrderProcessor(
-        DiscountCalculator discountCalculator,
-        ShippingCalculator shippingCalculator,
-        TaxCalculator taxCalculator,
+        OrderFinancialService orderFinancialService,
         InventoryManager inventoryManager,
         PaymentProcessor paymentProcessor,
         OrderValidator orderValidator,
-        CustomerNotifier customerNotifier,
-        WarehouseNotifier warehouseNotifier)
+        OrderNotificationService orderNotificationService)
     {
-        _discountCalculator = discountCalculator;
-        _shippingCalculator = shippingCalculator;
-        _taxCalculator = taxCalculator;
+        _orderFinancialService = orderFinancialService;
         _inventoryManager = inventoryManager;
         _paymentProcessor = paymentProcessor;
         _orderValidator = orderValidator;
-        _customerNotifier = customerNotifier;
-        _warehouseNotifier = warehouseNotifier;
+        _orderNotificationService = orderNotificationService;
     }
 
     public OrderResult ProcessOrder(Order order)
@@ -40,10 +31,7 @@ public class OrderProcessor
         }
 
         // Calculate financials
-        var discount = _discountCalculator.CalculateDiscount(order);
-        var shipping = _shippingCalculator.CalculateShipping(order);
-        var tax = _taxCalculator.CalculateTax(order);
-        var finalAmount = order.TotalAmount - discount + tax + shipping;
+        var finalAmount = _orderFinancialService.Calculate(order);
 
         // Process payment
         var paymentSuccessful = _paymentProcessor.ProcessPayment(order, finalAmount);
@@ -56,9 +44,52 @@ public class OrderProcessor
         _inventoryManager.ReserveInventory(order);
 
         // Notify stakeholders
-        _customerNotifier.NotifyCustomer(order);
-        _warehouseNotifier.NotifyWarehouse(order);
+        _orderNotificationService.Notify(order);
 
         return new OrderResult { Success = true, OrderId = order.Id };
+    }
+}
+
+
+public class OrderNotificationService
+{
+    private readonly CustomerNotifier _customerNotifier;
+    private readonly WarehouseNotifier _warehouseNotifier;
+
+    public OrderNotificationService(CustomerNotifier customerNotifier, WarehouseNotifier warehouseNotifier)
+    {
+        _customerNotifier = customerNotifier;
+        _warehouseNotifier = warehouseNotifier;
+    }
+
+    public void Notify(Order order)
+    {
+        _customerNotifier.NotifyCustomer(order);
+        _warehouseNotifier.NotifyWarehouse(order);
+    }
+}
+
+public class OrderFinancialService
+{
+    private readonly DiscountCalculator _discountCalculator;
+    private readonly ShippingCalculator _shippingCalculator;
+    private readonly TaxCalculator _taxCalculator;
+
+    public OrderFinancialService(
+        DiscountCalculator discountCalculator,
+        ShippingCalculator shippingCalculator,
+        TaxCalculator taxCalculator)
+    {
+        _discountCalculator = discountCalculator;
+        _shippingCalculator = shippingCalculator;
+        _taxCalculator = taxCalculator;
+    }
+
+    public decimal Calculate(Order order)
+    {
+        var discount = _discountCalculator.CalculateDiscount(order);
+        var shipping = _shippingCalculator.CalculateShipping(order);
+        var tax = _taxCalculator.CalculateTax(order);
+        return order.TotalAmount - discount + tax + shipping;
     }
 }

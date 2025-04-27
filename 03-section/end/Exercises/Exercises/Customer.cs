@@ -1,3 +1,5 @@
+using Exercises.enums;
+
 namespace Exercises;
 
 public class Customer

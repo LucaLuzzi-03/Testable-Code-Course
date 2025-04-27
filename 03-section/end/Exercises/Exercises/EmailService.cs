@@ -1,6 +1,8 @@
+using Exercises.interfaces;
+
 namespace Exercises;
 
-public class EmailService
+public class EmailService : IEmailService
 {
     public void SendOrderConfirmation(string email, Order order)
     {

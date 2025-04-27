@@ -1,14 +1,27 @@
+using Exercises.interfaces;
+
 namespace Exercises;
 
-public class OrderNotificationService
+public class OrderNotificationService : IOrderNotificationService
 {
+    private readonly IEmailService _emailService;
+    private readonly ILoyaltyPointsCalculator _loyaltyPointsCalculator;
+    private readonly IPushNotificationService _pushNotificationService;
+
+    public OrderNotificationService(
+        IEmailService emailService, 
+        ILoyaltyPointsCalculator loyaltyPointsCalculator, 
+        IPushNotificationService pushNotificationService)
+    {
+        _emailService = emailService;
+        _loyaltyPointsCalculator = loyaltyPointsCalculator;
+        _pushNotificationService = pushNotificationService;
+    }
+
     public void SendOrderNotifications(Order order)
     {
-        var emailSender = new EmailService();
-        emailSender.SendOrderConfirmation(order.Customer.Email, order);
-        
-        var loyaltyPointsCalculator = new LoyaltyPointsCalculator();
-        int points = loyaltyPointsCalculator.CalculatePoints(order);
+        _emailService.SendOrderConfirmation(order.Customer.Email, order);
+        int points = _loyaltyPointsCalculator.CalculatePoints(order);
         
         var notification = new OrderNotification
         {
@@ -19,7 +32,6 @@ public class OrderNotificationService
             OrderDate = DateTime.Now 
         };
         
-        var pushNotificationService = new PushNotificationService();
-        pushNotificationService.SendNotification(order.Customer.Id, notification);
+        _pushNotificationService.SendNotification(order.Customer.Id, notification);
     }
 }
