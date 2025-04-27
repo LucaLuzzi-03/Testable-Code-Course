@@ -1,4 +1,4 @@
-namespace Exercises;
+namespace Exercises.enums;
 
 public enum CustomerTier
 {

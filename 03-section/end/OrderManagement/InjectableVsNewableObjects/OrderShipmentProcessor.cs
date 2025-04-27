@@ -1,12 +1,17 @@
 namespace OrderManagement.InjectableVsNewableObjects;
 public class OrderShipmentProcessor
 {
+    private readonly IShippingRateCalculator _shippingRateCalculator;
+
+    public OrderShipmentProcessor(IShippingRateCalculator shippingRateCalculator)
+    {
+        _shippingRateCalculator = shippingRateCalculator;
+    }
+
     public void ProcessShipment(Order order)
     {
-        var shippingCalculator = new ShippingRateCalculator();
-        decimal shippingCost = shippingCalculator.CalculateRate(
-            order.ShippingAddress,
-            order.TotalWeight);
+        decimal shippingCost = _shippingRateCalculator
+            .CalculateRate(order.ShippingAddress, order.TotalWeight);
 
         var shipmentInfo = new ShipmentInfo
         {

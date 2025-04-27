@@ -1,30 +1,46 @@
+using Exercises.interfaces;
+
 namespace Exercises;
 
-public class PaymentProcessor
+public class PaymentProcessor : IPaymentProcessor
 {
+    private readonly IEnumerable<IPaymentValidation> _paymentValidations;
+
+    public PaymentProcessor(IEnumerable<IPaymentValidation> paymentValidations)
+    {
+        _paymentValidations = paymentValidations;
+    }
+
     public bool ProcessPayment(PaymentInfo paymentInfo, decimal amount)
     {
         // Validate payment info
-        if (string.IsNullOrEmpty(paymentInfo.CardNumber) ||
-            string.IsNullOrEmpty(paymentInfo.ExpiryDate) ||
-            string.IsNullOrEmpty(paymentInfo.Cvv))
+        foreach (var validation in _paymentValidations)
         {
-            return false;
-        }
-
-        // Basic card validation
-        if (!IsValidCreditCard(paymentInfo.CardNumber))
-        {
-            return false;
+            if (!validation.IsValid(paymentInfo))
+            {
+                return false;
+            }
         }
 
         // In a real scenario, this would connect to a payment gateway
         return true;
     }
-
-    private bool IsValidCreditCard(string cardNumber)
-    {
-        // Simplified validation for example purposes
-        return cardNumber.Length >= 13 && cardNumber.Length <= 16 && cardNumber.All(char.IsDigit);
-    }
 }
+
+#region Payment Validations
+public class PaymentInfoIsCompleteValidation : IPaymentValidation
+{
+    public bool IsValid(PaymentInfo paymentInfo) =>
+        (string.IsNullOrEmpty(paymentInfo.CardNumber) ||
+        string.IsNullOrEmpty(paymentInfo.ExpiryDate) ||
+        string.IsNullOrEmpty(paymentInfo.Cvv));
+}
+
+public class PaymentInfoIsValidCreditCardValidation : IPaymentValidation
+{
+    public bool IsValid(PaymentInfo paymentInfo) =>
+        (paymentInfo.CardNumber.Length >= 13 &&
+        paymentInfo.CardNumber.Length <= 16 &&
+        paymentInfo.CardNumber.All(char.IsDigit));
+}
+#endregion

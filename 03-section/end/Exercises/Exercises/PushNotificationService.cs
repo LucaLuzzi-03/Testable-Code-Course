@@ -1,6 +1,8 @@
+using Exercises.interfaces;
+
 namespace Exercises;
 
-public class PushNotificationService
+public class PushNotificationService : IPushNotificationService
 {
     public void SendNotification(int customerId, OrderNotification notification)
     {
